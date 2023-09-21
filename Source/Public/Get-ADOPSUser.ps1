@@ -42,7 +42,7 @@ function Get-ADOPSUser {
         $Method = 'GET'
         $Users = (InvokeADOPSRestMethod -Uri $Uri -Method $Method).members.user
         if ($null -eq $Users) {
-            Get-ADOPSUser | Where-Object -Property displayName -eq $Name
+            $Users = Get-ADOPSUser | Where-Object -Property displayName -eq $Name
         }
         Write-Output $Users
     }
