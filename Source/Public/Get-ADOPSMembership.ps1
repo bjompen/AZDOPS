@@ -1,16 +1,15 @@
 function Get-ADOPSMembership {
-    param ([Parameter()]
+    param (
+        [Parameter()]
         [string]$Organization,
 
         [Parameter(Mandatory)]
-        [string]
-        $Descriptor,
+        [string]$Descriptor,
 
         # The default value for direction is 'up' meaning return all memberships where the subject is a member (e.g. all groups the subject is a member of). Alternatively, passing the direction as 'down' will return all memberships where the subject is a container (e.g. all members of the subject group).
         [Parameter()]
-        [string]
         [ValidateSet('up', 'down')]
-        $Direction = 'up'
+        [string]$Direction = 'up'
     )
     
     # If user didn't specify org, get it from saved context
