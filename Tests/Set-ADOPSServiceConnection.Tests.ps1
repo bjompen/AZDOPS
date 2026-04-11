@@ -110,5 +110,51 @@ Describe 'Set-ADOPSServiceConnection' {
             Set-ADOPSServiceConnection @Splat
             Should -Invoke GetADOPSDefaultOrganization -ModuleName ADOPS -Times 1 -Exactly
         }
+
+        It 'Should call InvokeADOPSRestMethod with ManagedServiceIdentity scheme when -ManagedIdentity is used' {
+            $MsiSplat = @{
+                Project           = 'myproj'
+                TenantId          = 'AzureTennantId'
+                SubscriptionName  = 'AzureSubscriptionName'
+                SubscriptionId    = 'AzureSubscriptionId'
+                ServiceEndpointId = '8bce170f-ac4e-4164-a7d7-6cbc8f69f6af'
+                ManagedIdentity   = $true
+            }
+            Set-ADOPSServiceConnection @MsiSplat
+            Should -Invoke InvokeADOPSRestMethod -ModuleName ADOPS -Times 1 -Exactly -ParameterFilter {
+                ($Body | ConvertFrom-Json).authorization.scheme -eq 'ManagedServiceIdentity'
+            }
+        }
+
+        It 'Should call InvokeADOPSRestMethod with WorkloadIdentityFederation scheme when federation params are used' {
+            $WifSplat = @{
+                Project                            = 'myproj'
+                TenantId                           = 'AzureTennantId'
+                SubscriptionName                   = 'AzureSubscriptionName'
+                SubscriptionId                     = 'AzureSubscriptionId'
+                ServiceEndpointId                  = '8bce170f-ac4e-4164-a7d7-6cbc8f69f6af'
+                ServicePrincipalId                 = 'mySpId'
+                WorkloadIdentityFederationIssuer   = 'https://issuer.example.com'
+                WorkloadIdentityFederationSubject  = 'system:serviceaccount:default:mysa'
+            }
+            Set-ADOPSServiceConnection @WifSplat
+            Should -Invoke InvokeADOPSRestMethod -ModuleName ADOPS -Times 1 -Exactly -ParameterFilter {
+                ($Body | ConvertFrom-Json).authorization.scheme -eq 'WorkloadIdentityFederation'
+            }
+        }
+
+        It 'Should include the EndpointOperation in the URI when -EndpointOperation is specified' {
+            Set-ADOPSServiceConnection -EndpointOperation 'update' @Splat
+            Should -Invoke InvokeADOPSRestMethod -ModuleName ADOPS -Times 1 -Exactly -ParameterFilter {
+                $Uri -like '*operation=update*'
+            }
+        }
+
+        It 'Should NOT include EndpointOperation in URI when -EndpointOperation is not specified' {
+            Set-ADOPSServiceConnection @Splat
+            Should -Invoke InvokeADOPSRestMethod -ModuleName ADOPS -Times 1 -Exactly -ParameterFilter {
+                $Uri -notlike '*operation=*'
+            }
+        }
     }
 }
